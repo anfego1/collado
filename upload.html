@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir vídeos o imágenes</title>
+    <style>
+        /* Estilos Generales */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: block;
+            background: #4f46e5;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: 0.3s ease-in-out;
+            font-weight: 500;
+        }
+
+        .file-label:hover {
+            background: #4338ca;
+        }
+
+        .file-info {
+            margin-bottom: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Galería de vistas previas */
+        .preview-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .preview-item {
+            width: 100px;
+            height: 100px;
+            overflow: hidden;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .preview-item img,
+        .preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .upload-btn {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s ease-in-out;
+            font-weight: 600;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .upload-btn:hover {
+            background: #16a34a;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background: #374151;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress {
+            height: 10px;
+            width: 0%;
+            background: #22c55e;
+            transition: width 0.4s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Subir vídeo o imágenes</h2>
+
+        <!-- Selector de archivo personalizado -->
+        <input type="file" id="fileInput" class="file-input" accept="image/*,video/*" multiple>
+        <label for="fileInput" class="file-label">Seleccionar Archivos</label>
+
+        <!-- Información de archivos seleccionados -->
+        <p id="fileInfo" class="file-info">No se ha seleccionado ningún archivo.</p>
+
+        <!-- Vista previa de imágenes y videos -->
+        <div id="previewGallery" class="preview-gallery"></div>
+
+        <!-- Botón de subida (oculto por defecto) -->
+        <button class="upload-btn" id="uploadBtn" onclick="uploadFile()">Subir</button>
+
+        <!-- Barra de progreso -->
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <p id="status" class="status"></p>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById("fileInput");
+        const previewGallery = document.getElementById("previewGallery");
+        const uploadBtn = document.getElementById("uploadBtn");
+        const fileInfo = document.getElementById("fileInfo");
+
+        // Detectar cambios en el input de archivos
+        fileInput.addEventListener("change", function (event) {
+            const files = event.target.files;
+            previewGallery.innerHTML = "";
+
+            if (files.length > 0) {
+                uploadBtn.style.display = "block"; // Mostrar botón de subida
+                fileInfo.textContent = `${files.length} archivo(s) seleccionado(s): ` + [...files].map(f => f.name).join(", ");
+
+                [...files].forEach(file => {
+                    const previewItem = document.createElement("div");
+                    previewItem.classList.add("preview-item");
+
+                    if (file.type.startsWith("image/")) {
+                        const img = document.createElement("img");
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                        previewItem.appendChild(img);
+                    } else if (file.type.startsWith("video/")) {
+                        const video = document.createElement("video");
+                        video.src = URL.createObjectURL(file);
+                        video.controls = true;
+                        previewItem.appendChild(video);
+                    }
+
+                    previewGallery.appendChild(previewItem);
+                });
+            } else {
+                uploadBtn.style.display = "none"; // Ocultar si no hay archivos seleccionados
+                fileInfo.textContent = "No se ha seleccionado ningún archivo.";
+            }
+        });
+
+        function uploadFile() {
+            let files = fileInput.files;
+            if (files.length === 0) {
+                alert("Selecciona un archivo primero.");
+                return;
+            }
+
+            let formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append("file[]", files[i]); // Permitir múltiples archivos
+            }
+
+            let progressBar = document.querySelector('.progress-bar');
+            let progress = document.getElementById('progress');
+            progressBar.style.display = "block";
+            progress.style.width = "5%";
+
+            fetch("https://centronaturalcollado.com/upload.php", {
+                method: "POST",
+                body: formData,
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+            })
+                .then(response => response.text()) // Primero obtenemos el texto
+                .then(text => {
+                    try {
+                        return JSON.parse(text); // Intentamos convertirlo a JSON
+                    } catch (error) {
+                        console.error("⚠️ Respuesta no es JSON:", text);
+                        throw new Error("La respuesta del servidor no es JSON válido.");
+                    }
+                })
+                .then(data => {
+                    document.getElementById('status').innerText = "Archivos subidos con éxito.";
+                    progress.style.width = "100%";
+
+                    // Recargar la página después de 10 segundos
+                    setTimeout(() => {
+                        location.reload();
+                    }, 10000);
+                })
+                .catch(error => {
+                    document.getElementById('status').innerText = "Error al subir los archivos.";
+                    console.error("🚨 Error en la subida:", error);
+                });
+        }
+    </script>
+</body>
+
+</html>
